@@ -9,17 +9,17 @@ public class PIncrement implements Runnable{
 	static int count;
 	static TournamentLock tlock;
 	static ArrayList<Thread> t;
-	static int[] countBythread;
+//	static int[] countBythread;
 	
 	PIncrement(int start, int numThreads){
 		count = start;
 	}
 	
 	public static int parallelIncrement(int c, int numThreads){
-        countBythread = new int[numThreads];
-        for(int i = 0; i < numThreads; i++) {
-        	countBythread[i] = 0;
-        }
+//        countBythread = new int[numThreads];
+//        for(int i = 0; i < numThreads; i++) {
+//        	countBythread[i] = 0;
+//        }
 		PIncrement pi = new PIncrement(c, numThreads);
         tlock = new TournamentLock(numThreads);
         try {
@@ -46,14 +46,14 @@ public class PIncrement implements Runnable{
 			try {
 				if(count < m) {
 					count++;
-					countBythread[currentT]++;
-					//System.out.println("Thread " + currentT + " incremented to " + count);
+//					countBythread[currentT]++;
+//					System.out.println("Thread " + currentT + " incremented to " + count);
 				}
 			}finally {
 				tlock.unlock(currentT);
 			}
 		}
-		System.out.println("Thread " + currentT + " counted " + countBythread[currentT]);
+		//System.out.println("Thread " + currentT + " counted " + countBythread[currentT]);
 		return;
 	}
 	

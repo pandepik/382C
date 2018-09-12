@@ -23,6 +23,8 @@ public class Frequency implements Callable<Integer> {
 			return -1;
 		}
 		
+		//System.out.println("ArrayLength " + A.length);
+		
 		if(A.length >= numThreads) {
 			try {
 				ExecutorService exe = Executors.newFixedThreadPool(numThreads);
@@ -38,10 +40,15 @@ public class Frequency implements Callable<Integer> {
 			}
 		}else {
 			try {
-				ExecutorService exe = Executors.newSingleThreadExecutor();
-				Frequency freq = new Frequency(x, A);
-				Future<Integer> f = exe.submit(freq);
-				return f.get();
+				int t = A.length;
+				ExecutorService exe = Executors.newFixedThreadPool(t);
+				int count = 0;
+				for(int i = 0; i < t; i++) {
+					Frequency freq = new Frequency(x, Arrays.copyOfRange(A, (i)*(A.length/t), (i+1)*(A.length/t)));
+					Future<Integer> f = exe.submit(freq);
+					count += f.get();
+				}
+				return count;
 			}catch(Exception e) {
 				System.err.println(e);
 			}
@@ -53,6 +60,7 @@ public class Frequency implements Callable<Integer> {
 		try {
 			int count = 0;
 			for(int i = 0; i < array.length; i++) {
+				//System.out.println(Thread.currentThread().getId() + " increments " + count);
 				count = (num == array[i]) ? count+1 : count;
 			}
 			return count;
@@ -71,3 +79,11 @@ public class Frequency implements Callable<Integer> {
 //}
 //return count;
 
+//try {
+//	ExecutorService exe = Executors.newSingleThreadExecutor();
+//	Frequency freq = new Frequency(x, A);
+//	Future<Integer> f = exe.submit(freq);
+//	return f.get();
+//}catch(Exception e) {
+//	System.err.println(e);
+//}
