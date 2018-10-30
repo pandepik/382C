@@ -16,10 +16,17 @@ __global__ void findMin(int *d_in, int size)
 			d_in[0] = d_in[tId];
 		}
 	}
-	__syncthreads();
 }
 
-void reduce(int *d_in, int size) {
+__global__ void firstDigit(int *d_out, int *d_in, int size)
+{
+	int tId = threadIdx.x % size;
+	if (tId < size) {
+		d_out[tId] = d_in[tId] % 10;
+	}
+}
+
+void reduce(int *d_out, int *d_in, int size) {
 	const int maxThreadsPerBlock = 512;
 	int threads = maxThreadsPerBlock;
 	int blocks;
@@ -29,6 +36,7 @@ void reduce(int *d_in, int size) {
 	else {
 		blocks = 1;
 	}
+	firstDigit <<<blocks, threads >>> (d_out, d_in, size);
 	findMin<<<blocks, threads >>>(d_in, size);
 }
 
@@ -38,7 +46,7 @@ int main()
 	const int Array_Bytes = Array_Size * sizeof(int);
 
 	int num[Array_Size];
-	FILE *ifp, *ofp;
+	FILE *ifp, *ofp1, *ofp2;
 	char ch, buffer[32];
 	int i = 0, j = 0;
 
@@ -50,7 +58,8 @@ int main()
 	}
 
 	//Change this!
-	ofp = fopen("q1a.txt", "w");
+	ofp1 = fopen("q1a.txt", "w");
+	ofp2 = fopen("q1b.txt", "w");
 
 	//Take number and put into num array
 	while (1) {
@@ -86,36 +95,34 @@ int main()
 		}
 	}
 
-	int *d_in;//, *d_out;
+	int *d_in, *d_out;
 
 	cudaMalloc((void**)&d_in, Array_Bytes);
-	//cudaMalloc((void**)&d_out, Array_Bytes);
+	cudaMalloc((void**)&d_out, Array_Bytes);
 
 	cudaMemcpy(d_in, num, Array_Bytes, cudaMemcpyHostToDevice);
 
-	//reduce(d_out, d_in, j);
-	reduce(d_in, j);
+	reduce(d_out, d_in, j);
 
 	int min;
 	cudaMemcpy(&min, d_in, sizeof(int), cudaMemcpyDeviceToHost);
-	//int first[Array_Size];
-	//cudaMemcpy(first, d_out, Array_Bytes, cudaMemcpyDeviceToHost);
+	int first[Array_Size];
+	cudaMemcpy(first, d_out, Array_Bytes, cudaMemcpyDeviceToHost);
 
 	//Output min to text file
-	fprintf(ofp, "%d\n", min);
-
-	//Output first digit of each number
-	//for (int i = 0; i < j; i++) {
-	//	fprintf(ofp, "%d,", first[i]);
-	//}
+	fprintf(ofp1, "%d", min);
+	for (int i = 0; i < j; i++) {
+		fprintf(ofp2, "%d,", first[i]);
+	}
 
 	//Close files
 	fclose(ifp);
-	fclose(ofp);
+	fclose(ofp1);
+	fclose(ofp2);
 
 	//Free memory
 	cudaFree(d_in);
-	//cudaFree(d_out);
+	cudaFree(d_out);
 
     return 0;
 }
